@@ -1,0 +1,4 @@
+# Empty contract template
+
+
+# accordproperty
