@@ -1,0 +1,89 @@
+namespace com.mishcon.residential.shortformsales
+
+//import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
+//import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
+
+import org.accordproject.cicero.contract.*
+import org.accordproject.cicero.runtime.*
+
+import org.accordproject.address.PostalAddress from https://models.accordproject.org/address.cto
+//import org.accordproject.money.MonetaryAmount from https://models.accordproject.org/money.cto
+import org.accordproject.payment.PaymentReceived from https://models.accordproject.org/payment/payment.cto
+//import org.accordproject.address.PostalAddress
+import org.accordproject.money.MonetaryAmount
+//import org.accordproject.payment.PaymentReceived
+
+// Template model
+asset EmptyContract extends AccordContract {
+	o AccordParty seller
+	o AccordParty buyer
+
+	//o PostalAddress sellerAddress
+  //o PostalAddress buyerAddress
+
+  o String sellerAddress
+  o String buyerAddress
+
+ /** property details */
+  o String propertyName
+  o String titleNumber
+
+  /** lease related */
+  o String freeholdLeasehold
+  //o Boolean isFreehold
+  o String isFreehold
+  o String demisedByTheLease
+  o DateTime leaseDate
+
+	/** chatels may need to be an array or it's own type as per incumbances later */
+  o String chattels
+  o MonetaryAmount chattelsPrice
+
+  /** mortgage related */
+  //o Boolean isMortgage
+  o DateTime mortgateDate
+  // use a String for the moment
+  o String buyerMortgageChargeNumber
+
+  /** price */
+  o MonetaryAmount depositAmount
+  o MonetaryAmount purchasePrice
+
+  /** agreement and completion dates */
+	o DateTime agreementDate
+	//o String more
+}
+
+// Request
+transaction EmptyRequest extends Request {
+  o AccordParty seller
+	o AccordParty buyer
+
+	//o PostalAddress sellerAddress
+  //o PostalAddress buyerAddress
+  o String sellerAddress
+  o String buyerAddress
+
+  o String propertyName
+  o String titleNumber
+  o String freeholdLeasehold
+  //o Boolean isFreehold
+  o String isFreehold
+
+  o String demisedByTheLease
+  o DateTime leaseDate
+  o String chattels
+  o MonetaryAmount chattelsPrice
+
+  //o Boolean isMortgage
+  o DateTime mortgateDate
+  o String buyerMortgageChargeNumber
+  o MonetaryAmount depositAmount
+  o MonetaryAmount purchasePrice
+	o DateTime agreementDate
+	//o String more
+}
+
+// Response
+transaction EmptyResponse extends Response {
+}

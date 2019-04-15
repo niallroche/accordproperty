@@ -1,0 +1,10 @@
+namespace org.accordproject.uk.property
+
+/**
+ * Types of businesses in the USA
+ * Taken from: https://en.wikipedia.org/wiki/List_of_business_entities#United_States
+ */
+enum Propertytype {
+  o LEASEHOLD
+  o FREEHOLD
+}
