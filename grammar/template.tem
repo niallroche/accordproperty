@@ -5,7 +5,7 @@ BETWEEN:
 (2)	[{buyer}] of [{buyerAddress}] ("the Buyer")
 1.	DEFINITIONS
 1.1	In this Agreement the following definitions apply:
-the Property	:	The [{isFreehold}] [{freeholdLeasehold}] property [{demisedByTheLease}] known as  [{propertyName}] and registered at the Land Registry with the Title Number [{titleNumber}]
+the Property	:	The [{freeholdLeasehold}] property [{demisedByTheLease}] known as  [{propertyName}] and registered at the Land Registry with the Title Number [{titleNumber}]
 
 the Lease	:	the Lease of the Property dated [{leaseDate}] and made between [{seller}] (1) and [{buyer}] (2) and any supplemental deeds and documents
 the Title Number		[{titleNumber}]

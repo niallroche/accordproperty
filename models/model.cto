@@ -1,17 +1,24 @@
 namespace com.mishcon.residential.shortformsales
 
-//import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
-//import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
+import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
+import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
 
-import org.accordproject.cicero.contract.*
-import org.accordproject.cicero.runtime.*
+//import org.accordproject.cicero.contract.*
+//import org.accordproject.cicero.runtime.*
 
-import org.accordproject.address.PostalAddress from https://models.accordproject.org/address.cto
+////import org.accordproject.address.PostalAddress from https://models.accordproject.org/address.cto
 //import org.accordproject.money.MonetaryAmount from https://models.accordproject.org/money.cto
-import org.accordproject.payment.PaymentReceived from https://models.accordproject.org/payment/payment.cto
+////import org.accordproject.payment.PaymentReceived from https://models.accordproject.org/payment/payment.cto
 //import org.accordproject.address.PostalAddress
 import org.accordproject.money.MonetaryAmount
 //import org.accordproject.payment.PaymentReceived
+
+//import org.accordproject.uk.property
+
+enum PropertyType {
+  o LEASEHOLD
+  o FREEHOLD
+}
 
 // Template model
 asset EmptyContract extends AccordContract {
@@ -31,7 +38,8 @@ asset EmptyContract extends AccordContract {
   /** lease related */
   o String freeholdLeasehold
   //o Boolean isFreehold
-  o String isFreehold
+  //o String isFreehold
+  //o PropertyType leasetype
   o String demisedByTheLease
   o DateTime leaseDate
 
@@ -68,7 +76,7 @@ transaction EmptyRequest extends Request {
   o String titleNumber
   o String freeholdLeasehold
   //o Boolean isFreehold
-  o String isFreehold
+  //o String isFreehold
 
   o String demisedByTheLease
   o DateTime leaseDate

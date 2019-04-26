@@ -5,7 +5,7 @@ BETWEEN:
 (2)	"Some Rich Buyer" of "10 Someplace Somecountry SE16NB" ("the Buyer")
 1.	DEFINITIONS
 1.1	In this Agreement the following definitions apply:
-the Property	:	The "leashold" "Freehold" property "DemisedByTheLease" known as  "Some property Name" and registered at the Land Registry with the Title Number "NGL3453334"
+the Property	:	The "Freehold" property "DemisedByTheLease" known as  "Some property Name" and registered at the Land Registry with the Title Number "NGL3453334"
 
 the Lease	:	the Lease of the Property dated 05/10/2018 and made between "SellerName" (1) and "Some Rich Buyer" (2) and any supplemental deeds and documents
 the Title Number		"NGL3453334"
