@@ -2,6 +2,7 @@ namespace com.mishcon.residential.shortformsales
 
 import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
 import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
+import org.accordproject.time.* from https://models.accordproject.org/v2.0/time.cto
 
 //import org.accordproject.cicero.contract.*
 //import org.accordproject.cicero.runtime.*
@@ -94,4 +95,43 @@ transaction EmptyRequest extends Request {
 
 // Response
 transaction EmptyResponse extends Response {
+}
+
+transaction SaleCompletionRequest extends Request {
+ /**
+   * Are we in a force majeure situation? 
+   */
+  o Boolean forceMajeure
+
+  /**
+   * What was the agreed delivery date for the goods?
+   */
+  o DateTime agreedDepositDate
+
+  /**
+   * When the deposit has been received
+   */
+  o DateTime depositReceivedAt optional
+
+  /**
+   * What is the value of the goods?
+   */
+  o Double goodsValue
+}
+
+transaction SaleCompletionResponse extends Response {
+    /**
+   * The penalty to be paid by the seller
+   */
+  o Double penalty
+
+  /**
+   * Whether the buyer may terminate the contract 
+   */
+  o Boolean buyerMayTerminate
+
+    /**
+   * Whether the seller may terminate the contract 
+   */
+  o Boolean sellerMayTerminate
 }

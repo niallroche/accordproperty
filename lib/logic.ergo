@@ -15,8 +15,55 @@
 //namespace org.accordproject.empty
 namespace com.mishcon.residential.shortformsales
 
+import org.accordproject.cicero.runtime.*
+import org.accordproject.time.*
+import org.accordproject.money.MonetaryAmount
+//import com.mishcon.residential.shortformsales.*
+
 contract Empty over EmptyContract {
   clause donothing(request : EmptyRequest) : EmptyResponse {
     return EmptyResponse{}
   }
-}
+
+
+  //TODO consider if we need a clause/function to check if there is a breech, and if so how much, but not to trigger a breach
+
+  clause latedeliveryandpenalty(request : SaleCompletionRequest) : SaleCompletionResponse emits PaymentObligation {
+    let agreed = request.agreedDepositDate;
+    let received = request.depositReceivedAt;
+
+    //check time, if not specified then the 2pm dealine applies, but it may be earlier due to an agreed chain time
+    //TODO check what happens if agree to be received after 2pm, such as COB or before midnight
+
+    //deposit may not have been received yet
+    //if (received) {
+      //if deposit has not been received then need to check if the current time is within the agreed period, if not then indicate that 
+    //}
+
+    //need conditions for deposit being received 
+    //A on or ahead of agreed time
+    //B after agreed
+    //C if after agreed then need to consider if this invalidates the contract
+
+    // Calculate the time difference between current date and agreed upon date
+    let diff = diffDurationAs(now(),agreed,"days").amount;
+
+    // Penalty formula below from  latedelivery and penalty clause
+    /*let penalty =
+      (integerToDouble(diff) / integerToDouble(contract.penaltyDuration.amount))
+		  * contract.penaltyPercentage/100.0 * request.goodsValue;
+    // Penalty may be capped
+    let capped = min([penalty, contract.capPercentage * request.goodsValue / 100.0]);
+    // Return the response with the penalty and termination determination
+    return SaleCompletionResponse{
+      penalty: capped,
+      buyerMayTerminate: diff > contract.termination.amount
+    }*/
+
+   return SaleCompletionResponse{
+      penalty: 0.0,
+      sellerMayTerminate: false,
+      buyerMayTerminate: false
+    }
+  } // end clause latedeliveryandpenalty
+} // end contract
