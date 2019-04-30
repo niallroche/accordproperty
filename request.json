@@ -1,1 +1,8 @@
-{"$class":"org.accordproject.empty.EmptyRequest"}
+{
+    "$class": "com.mishcon.residential.shortformsales.SaleCompletionRequest",
+    "forceMajeure": false,
+    "agreedDepositDate": "2019-04-26T03:24:00-05:00",
+    "depositReceivedAt": "2019-04-28T03:24:00-05:00",
+    "interestRate":4.75,
+    "contractRate":4.75
+}

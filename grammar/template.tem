@@ -15,3 +15,4 @@ the Additional Price for Chattels	:	[{chattelsPrice}]
 the Charge	:	The mortgage dated [{mortgateDate}] and referred to at entry no [{buyerMortgageChargeNumber}] of the charges register of the title to the Property.
 the Purchase Price	:	[{purchasePrice}]
 the Deposit	:	[{depositAmount}]
+penaltyDuration : [{penaltyDuration}] duration

@@ -35,10 +35,70 @@ contract Empty over EmptyContract {
     //check time, if not specified then the 2pm dealine applies, but it may be earlier due to an agreed chain time
     //TODO check what happens if agree to be received after 2pm, such as COB or before midnight
 
+
     //deposit may not have been received yet
-    //if (received) {
+    /*match received
+      let received = request.depositReceivedAt;
+    else
+      let received = request.depositReceivedAt;*/
       //if deposit has not been received then need to check if the current time is within the agreed period, if not then indicate that 
-    //}
+    
+    /*match request.depositReceivedAt
+    with let? received then let received = request.depositReceivedAt
+    else let received = now */
+
+
+/*
+If the money due on completion is received after 2.00pm, completion is to be treated, for
+the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a
+result of the buyer's default
+*/
+let diff = diffDurationAs(received,agreed,"days"); //time??
+//let diff = 1;
+
+//log "difference in days" diff
+
+//5.3
+let totalRepairCosts = 0.0;
+
+/*7.2 Late completion
+
+7.2.2 Compensation is calculated at the contract rate on an amount equal to the purchase price,
+less (where the buyer is the paying party) any deposit paid, for the period by which the
+paying party's default exceeds that of the receiving party, or, if shorter, the period between
+completion date and actual completion.*/
+/*let totalLateCompensation =
+      integerToDouble(diff) 
+		  * request.contractRate/100.0 * contract.purchasePrice;*/
+
+//let penaltyDuration :Duration = 
+
+let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+    // Penalty formula
+let penalty = diffRatio * request.contractRate/100.0 * contract.purchasePrice;
+
+let totalLateCompensation = penalty;
+/* Apportionments
+
+104,750 = 1 * 4.75/100 * 100,000
+
+let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+    // Penalty formula
+    let penalty = diffRatio * contract.penaltyPercentage/100.0 * request.goodsValue;
+ 
+*/
+let totalApportionments = 0.0;
+
+/*6.4 Amount payable
+The amount payable by the buyer on completion is the purchase price and the contents
+price (less any deposit already paid to the seller or his agent) adjusted to take account of:
+(a) apportionments made under condition 6.3
+(b) any compensation to be paid or allowed
+(c) any sum payable under condition 5.1.3*/
+let totalAmountPayable = 0.0;
+let totalAmountPayable = totalAmountPayable + totalApportionments;
+let totalAmountPayable = totalAmountPayable + totalLateCompensation;
+let totalAmountPayable = totalAmountPayable + totalRepairCosts;
 
     //need conditions for deposit being received 
     //A on or ahead of agreed time
@@ -46,7 +106,7 @@ contract Empty over EmptyContract {
     //C if after agreed then need to consider if this invalidates the contract
 
     // Calculate the time difference between current date and agreed upon date
-    let diff = diffDurationAs(now(),agreed,"days").amount;
+    //let diff = diffDurationAs(now(),agreed,"days").amount;
 
     // Penalty formula below from  latedelivery and penalty clause
     /*let penalty =
@@ -60,8 +120,14 @@ contract Empty over EmptyContract {
       buyerMayTerminate: diff > contract.termination.amount
     }*/
 
+    /*
+Any resulting balance is to be paid no more than ten working days later, and if not then
+paid the balance is to bear interest at the contract
+    */
+
    return SaleCompletionResponse{
-      penalty: 0.0,
+      penalty: totalAmountPayable,
+      daysLate:diff,
       sellerMayTerminate: false,
       buyerMayTerminate: false
     }

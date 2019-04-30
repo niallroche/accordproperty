@@ -56,11 +56,13 @@ asset EmptyContract extends AccordContract {
 
   /** price */
   o MonetaryAmount depositAmount
-  o MonetaryAmount purchasePrice
+  //o MonetaryAmount purchasePrice
+  o Double purchasePrice
 
   /** agreement and completion dates */
 	o DateTime agreementDate
 	//o String more
+  o Duration penaltyDuration
 }
 
 // Request
@@ -91,6 +93,15 @@ transaction EmptyRequest extends Request {
   o MonetaryAmount purchasePrice
 	o DateTime agreementDate
 	//o String more
+
+  o MonetaryAmount compensationPaidToSeller
+  o MonetaryAmount compensationPaidToBuyer
+
+  o DateTime defaultPeriodSeller
+  o DateTime defaultPeriodBuyer
+
+  /** 5.1.3 */
+  o MonetaryAmount repairCosts
 }
 
 // Response
@@ -111,12 +122,21 @@ transaction SaleCompletionRequest extends Request {
   /**
    * When the deposit has been received
    */
-  o DateTime depositReceivedAt optional
+  //o DateTime depositReceivedAt optional
+  o DateTime depositReceivedAt
 
-  /**
-   * What is the value of the goods?
+   /**
+   * The BOE interest rate for the penalty to be paid by the buyer if late
+   the interest which might reasonably have been earned by depositing
+
+1.1.1(a) the money at interest on seven days' notice of withdrawal with a clearing bank
+less, in either case, any proper charges for handling the money
    */
-  o Double goodsValue
+
+  o Double interestRate
+
+  /* 1.1.1 t(e)Law Society's interest rate*/
+  o Double contractRate
 }
 
 transaction SaleCompletionResponse extends Response {
@@ -124,6 +144,8 @@ transaction SaleCompletionResponse extends Response {
    * The penalty to be paid by the seller
    */
   o Double penalty
+
+  o Duration daysLate
 
   /**
    * Whether the buyer may terminate the contract 
