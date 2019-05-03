@@ -119,7 +119,7 @@ let totalAmountPayable = totalAmountPayable + totalRepairCosts;
       penalty: capped,
       buyerMayTerminate: diff > contract.termination.amount
     }*/
-
+    //7.5.2
     /*
 Any resulting balance is to be paid no more than ten working days later, and if not then
 paid the balance is to bear interest at the contract
