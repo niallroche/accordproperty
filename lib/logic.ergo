@@ -20,11 +20,16 @@ import org.accordproject.time.*
 import org.accordproject.money.MonetaryAmount
 //import com.mishcon.residential.shortformsales.*
 
-contract Empty over EmptyContract {
-  clause donothing(request : EmptyRequest) : EmptyResponse {
-    return EmptyResponse{}
+contract ResidentialSales over EmptyContract state PropertyPurchaseState {
+
+  /* define function calculatePenalty() : Double {
+    //return contract.PRICE*contract.LAW_SOCIETY_RATE;
+    return 0.0;
   }
 
+  define function calculateInterest() : Double {
+    return contract.PRICE*contract.LAW_SOCIETY_RATE;
+  } */
 
   //TODO consider if we need a clause/function to check if there is a breech, and if so how much, but not to trigger a breach
 
@@ -165,4 +170,62 @@ paid the balance is to bear interest at the contract
       buyerMayTerminate: false
     }
   } // end clause latedeliveryandpenalty
+
+  clause LatePaymentNotification(request : LatePaymentNotificationRequest) : LatePaymentNotificationResponse {
+    set state PropertyPurchaseState {
+        status: "BuyerInDefault"
+    };
+    return LatePaymentNotificationResponse{
+      sellerMayTerminate: true,//?
+      buyerMayTerminate: false
+    }
+  }
+
+  clause LatePayment(request : LateCompletionRequest) : LateCompletionResponse emits PaymentObligation {
+    set state PropertyPurchaseState {
+        status: "BuyerInDefault",
+        daily_penalty: contract.PRICE*contract.LAW_SOCIETY_RATE,
+        total_penalty: contract.LAW_SOCIETY_RATE//law society amount
+    };
+    let dfdf = 0;
+    return LatePaymentResponse{
+      penalty: totalAmountPayable,
+      daysLate:diff,
+      sellerMayTerminate: true,//?
+      buyerMayTerminate: false
+    }
+  }
+
+ clause SellerNotVacatedNotification(request : SellerNotVacatedNotificationRequest) : SellerNotVacatedNotificationResponse {
+    set state PropertyPurchaseState {
+        status: "SellerInDefault"
+    };
+    return SellerNotVacatedNotificationResponse{
+      sellerMayTerminate: false,
+      buyerMayTerminate: true//?
+    }
+  }
+
+  clause NoticeToComplete(request : NoticeToCompleteRequest) : NoticeToCompleteResponse {
+    set state PropertyPurchaseState {
+        noticeGivenBy:request.issuer,
+        status: "NoticeToComplete",
+        completion_date:request.completion_date
+    };
+    return NoticeToCompleteResponse{
+      sellerMayTerminate: false,
+      buyerMayTerminate: true//?
+    }
+  }
+
+  clause SellerRecinds(request : SellerRecindsRequest) : SellerRecindsResponse {
+    set state PropertyPurchaseState {
+        status: "SellerRecinds",
+        total_penalty: calculateInterest()
+    };
+
+    return SellerRecindsResponse{
+      total_penalty:0.0
+    }
+  }
 } // end contract

@@ -22,7 +22,7 @@ enum PropertyType {
 }
 
 // Template model
-asset EmptyContract extends AccordContract {
+asset ResidentialSalesContract extends AccordContract {
 	o AccordParty seller
 	o AccordParty buyer
 
@@ -66,7 +66,7 @@ asset EmptyContract extends AccordContract {
 }
 
 // Request
-transaction EmptyRequest extends Request {
+transaction ResidentialSalesRequest extends Request {
   o AccordParty seller
 	o AccordParty buyer
 
@@ -106,15 +106,10 @@ transaction EmptyRequest extends Request {
 }
 
 // Response
-transaction EmptyResponse extends Response {
+transaction ResidentialSalesResponse extends Response {
 }
 
 transaction SaleCompletionRequest extends Request {
- /**
-   * Are we in a force majeure situation? 
-   */
-  o Boolean forceMajeure
-
   /**
    * What was the agreed delivery date for the goods?
    */
@@ -138,6 +133,9 @@ less, in either case, any proper charges for handling the money
 
   /* 1.1.1 t(e)Law Society's interest rate*/
   o Double contractRate
+
+  /** the identifier for this matter */
+  o String caseRef
 }
 
 transaction SaleCompletionResponse extends Response {
@@ -157,4 +155,83 @@ transaction SaleCompletionResponse extends Response {
    * Whether the seller may terminate the contract 
    */
   o Boolean sellerMayTerminate
+
+  /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction LatePaymentNotificationRequest extends Request {
+ /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction LatePaymentNotificationResponse extends Response {
+  o Boolean sellerMayTerminate
+  o Boolean buyerMayTerminate
+}
+
+transaction LateCompletionRequest extends Request {
+   /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction LateCompletionResponse extends Response {
+  o Double penalty
+  o Long daysLate
+  o Boolean sellerMayTerminate
+  o Boolean buyerMayTerminate
+}
+
+transaction NoticeToCompleteRequest extends Request {
+ /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction NoticeToCompleteResponse extends Response {
+  o Boolean sellerMayTerminate
+  o Boolean buyerMayTerminate
+}
+
+transaction SellerRecindsRequest extends Request {
+   /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction SellerRecindsResponse  extends Response {
+   /** the penalty */
+   o Double total_penalty
+}
+
+/** both Buyer and Seller can be in default at the same time, so we need two states */
+enum ContractStatus {
+  o SellerRecinds
+  o NoticeToComplete
+  o InDefault
+}
+
+enum DefaultStatus {
+  o SellerInDefault
+  o BuyerInDefault
+}
+
+asset PropertyPurchaseState identified by caseRef {
+  o String caseRef
+  o ContractStatus status
+  o DefaultStatus BuyerDefaultStatus
+  o DefaultStatus SellerDefaultStatus
+  o Double apportionmentsTotal
+  o Double apportionmentsPaid
+  o Double balanceRemaining
+  o Double totalPenalty
+	o Double totalCompensationPaidToBuyer
+  o Double totalCompensationPaidToSeller
+  o Integer totalDefaultDaysBuyer
+  o Integer totalDefaultDaySeller
+  o DateTime completion_date
+}
+
+event PaymentObligation {
+  o String from
+	o String to
+	o Double amount
 }
