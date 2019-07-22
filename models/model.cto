@@ -1,68 +1,86 @@
-namespace com.mishcon.residential.shortformsales
+namespace org.accordproject.realeastate.residential.uk.shortformsales
 
 import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
 import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
 import org.accordproject.time.* from https://models.accordproject.org/v2.0/time.cto
+import org.accordproject.money.MonetaryAmount from https://models.accordproject.org/money.cto
 
-//import org.accordproject.cicero.contract.*
-//import org.accordproject.cicero.runtime.*
+transaction MyRequest extends Request {
+  o String input
+}
 
-////import org.accordproject.address.PostalAddress from https://models.accordproject.org/address.cto
-//import org.accordproject.money.MonetaryAmount from https://models.accordproject.org/money.cto
-////import org.accordproject.payment.PaymentReceived from https://models.accordproject.org/payment/payment.cto
-//import org.accordproject.address.PostalAddress
-import org.accordproject.money.MonetaryAmount
-//import org.accordproject.payment.PaymentReceived
-
-//import org.accordproject.uk.property
+transaction MyResponse extends Response {
+  o String output
+}
 
 enum PropertyType {
   o LEASEHOLD
   o FREEHOLD
 }
 
-// Template model
+/**
+ * The template model
+ */
 asset ResidentialSalesContract extends AccordContract {
-	o AccordParty seller
+
+  /**
+  * Buyer and seller details
+  */
+
+ 	o AccordParty seller
 	o AccordParty buyer
 
+  //removed for brevity, using a string for simplicity
 	//o PostalAddress sellerAddress
   //o PostalAddress buyerAddress
 
   o String sellerAddress
   o String buyerAddress
 
- /** property details */
+  /** 
+  * Property details
+  */
   o String propertyName
+  /**
+  * Land Registry Title number
+   */
   o String titleNumber
 
-  /** lease related */
-  o String freeholdLeasehold
-  //o Boolean isFreehold
-  //o String isFreehold
-  //o PropertyType leasetype
+  /** 
+  * freehold/leasehold related 
+  */
+  o PropertyType freeholdLeasehold
+  /** o String freeholdLeasehold */
   o String demisedByTheLease
   o DateTime leaseDate
 
-	/** chatels may need to be an array or it's own type as per incumbances later */
-  o String chattels
-  o MonetaryAmount chattelsPrice
+  /** 
+  * chatels may need to be an array or it's own type as per incumbances later 
+  */
+  // o String chattels
+  // o MonetaryAmount chattelsPrice
 
-  /** mortgage related */
-  //o Boolean isMortgage
+  /**
+  * Mortgage related
+  */
+  o Boolean isMortgaged
   o DateTime mortgateDate
-  // use a String for the moment
+  // using a String for the moment
   o String buyerMortgageChargeNumber
 
-  /** price */
-  o MonetaryAmount depositAmount
+  /**
+  * Purchase price related
+  */
   //o MonetaryAmount purchasePrice
   o Double purchasePrice
-
-  /** agreement and completion dates */
-	o DateTime agreementDate
-	//o String more
+  o MonetaryAmount depositAmount
+ 
+  /** 
+  * Agreement and completion dates 
+  */
+  o DateTime agreementDate
   o Duration penaltyDuration
+
 }
 
 // Request
@@ -138,6 +156,11 @@ less, in either case, any proper charges for handling the money
   o String caseRef
 }
 
+/**
+* Transaction definitions
+*/
+
+
 transaction SaleCompletionResponse extends Response {
     /**
    * The penalty to be paid by the seller
@@ -197,12 +220,28 @@ transaction SellerRecindsRequest extends Request {
   o String caseRef
 }
 
-transaction SellerRecindsResponse  extends Response {
+transaction SellerRecindsResponse extends Response {
    /** the penalty */
    o Double total_penalty
 }
 
-/** both Buyer and Seller can be in default at the same time, so we need two states */
+transaction SellerNotVacatedNotificationRequest extends Request {
+   /** the identifier for this matter */
+  o String caseRef
+}
+
+transaction SellerNotVacatedNotificationResponse extends Response {
+   /** the penalty */
+   o Double total_penalty
+}
+
+/**
+* State definitions
+*/
+
+/** 
+* both Buyer and Seller can be in default at the same time, so we need two states
+ */
 enum ContractStatus {
   o SellerRecinds
   o NoticeToComplete
@@ -217,8 +256,8 @@ enum DefaultStatus {
 asset PropertyPurchaseState identified by caseRef {
   o String caseRef
   o ContractStatus status
-  o DefaultStatus BuyerDefaultStatus
-  o DefaultStatus SellerDefaultStatus
+  o DefaultStatus buyerDefaultStatus
+  o DefaultStatus sellerDefaultStatus
   o Double apportionmentsTotal
   o Double apportionmentsPaid
   o Double balanceRemaining

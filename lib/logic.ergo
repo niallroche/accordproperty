@@ -12,24 +12,35 @@
  * limitations under the License.
  */
 
-//namespace org.accordproject.empty
-namespace com.mishcon.residential.shortformsales
+namespace org.accordproject.realeastate.residential.uk.shortformsales
 
 import org.accordproject.cicero.runtime.*
 import org.accordproject.time.*
 import org.accordproject.money.MonetaryAmount
 //import com.mishcon.residential.shortformsales.*
 
-contract ResidentialSales over EmptyContract state PropertyPurchaseState {
 
-  /* define function calculatePenalty() : Double {
-    //return contract.PRICE*contract.LAW_SOCIETY_RATE;
-    return 0.0;
-  }
+define function calculatePenalty(
+  price : Double, 
+  lawSocietyrate: Double
+) : Double {
+  //return contract.PRICE*contract.LAW_SOCIETY_RATE;
+  //return contract.PRICE;
+  //let penalty = price * lawSocietyrate;
+  //return penalty;
+  return (price * lawSocietyrate)
+}
 
-  define function calculateInterest() : Double {
-    return contract.PRICE*contract.LAW_SOCIETY_RATE;
-  } */
+define function calculateInterest(
+  price : Double, 
+  lawSocietyrate: Double
+) : MonetaryAmount {
+  return MonetaryAmount{ doubleValue: price*lawSocietyrate, currencyCode: "GBP" }
+  //return contract.PRICE*contract.LAW_SOCIETY_RATE;
+}
+
+//contract ResidentialSales over EmptyContract state PropertyPurchaseState {
+contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseState {
 
   //TODO consider if we need a clause/function to check if there is a breech, and if so how much, but not to trigger a breach
 
@@ -165,6 +176,7 @@ paid the balance is to bear interest at the contract
 
    return SaleCompletionResponse{
       penalty: totalAmountPayable,
+      caseRef: request.caseRef,
       daysLate:diff,
       sellerMayTerminate: false,
       buyerMayTerminate: false
@@ -173,7 +185,19 @@ paid the balance is to bear interest at the contract
 
   clause LatePaymentNotification(request : LatePaymentNotificationRequest) : LatePaymentNotificationResponse {
     set state PropertyPurchaseState {
-        status: "BuyerInDefault"
+        status: "BuyerInDefault",
+        caseRef: state.caseRef,
+        buyerDefaultStatus: state.buyerDefaultStatus,
+        sellerDefaultStatus: state.sellerDefaultStatus,
+        apportionmentsTotal: state.apportionmentsTotal,
+        apportionmentsPaid: state.apportionmentsPaid,
+        balanceRemaining: state.balanceRemaining,
+        totalPenalty: state.totalPenalty,
+        totalCompensationPaidToBuyer: state.totalCompensationPaidToBuyer,
+        totalCompensationPaidToSeller: state.totalCompensationPaidToSeller,
+        totalDefaultDaysBuyer: state.totalDefaultDaysBuyer,
+        totalDefaultDaySeller: state.totalDefaultDaySeller,
+        completion_date: state.completion_date
     };
     return LatePaymentNotificationResponse{
       sellerMayTerminate: true,//?
@@ -188,7 +212,7 @@ paid the balance is to bear interest at the contract
         total_penalty: contract.LAW_SOCIETY_RATE//law society amount
     };
     let dfdf = 0;
-    return LatePaymentResponse{
+    return LateCompletionResponse{
       penalty: totalAmountPayable,
       daysLate:diff,
       sellerMayTerminate: true,//?
@@ -221,7 +245,7 @@ paid the balance is to bear interest at the contract
   clause SellerRecinds(request : SellerRecindsRequest) : SellerRecindsResponse {
     set state PropertyPurchaseState {
         status: "SellerRecinds",
-        total_penalty: calculateInterest()
+        total_penalty: calculateInterest(contract.PRICE, contract.LAW_SOCIETY_RATE)
     };
 
     return SellerRecindsResponse{
