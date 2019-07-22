@@ -12,31 +12,115 @@
  * limitations under the License.
  */
 
-namespace org.accordproject.realeastate.residential.uk.shortformsales
+ /**
+  * this contract represents elements of the Standard Conditions of Sale (5th edition) from  the UK Law Society governing rules around house purchase in the UK
+  * see https://www.lawsociety.org.uk/support-services/documents/standard-conditions-of-sale-5th-edition/ for full details
+  */
+
+namespace org.accordproject.realestate.residential.uk.shortformsales
 
 import org.accordproject.cicero.runtime.*
 import org.accordproject.time.*
 import org.accordproject.money.MonetaryAmount
-//import com.mishcon.residential.shortformsales.*
 
+import org.accordproject.realestate.residential.uk.utils.*
 
-define function calculatePenalty(
-  price : Double, 
-  lawSocietyrate: Double
-) : Double {
+/**
+ * 6.1.2 indicates that 2pm is the cutoff for money to be received, if money is received after this point, the it is to be treated for
+ * the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a result of the buyer's default. 
+ * If an alternative time has been agreed (usually known as a chain time), then this time should be used instead of 2pm.
+ * This function accepts a boolean value to determine if the 2pm deadline is in force, if not supplied it will default to the date and time supplied
+ */
+define function determineIfLatePaymentApplies(
+  useDefaultCutoffTime: Boolean,
+  agreedPaymentDate: DateTime,
+  actualPaymentDate: DateTime  
+
+):Boolean {
+  //check if an explicit time is specified, otehrwise use the default
+  let cutoffTime : DateTime =
+    if useDefaultCutoffTime
+    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
+    else agreedPaymentDate;
+
+  //check if the actual date is late
+  if isBefore(cutoffTime, actualPaymentDate) 
+  then return true
+  else return false
+}
+
+ /**  
+  * If the buyer is late with their payment then calculate the delay for the purposes of applying a late penalty amount as per 7.2.2
+ */
+define function calculatePenaltyDuration(
+  useDefaultCutoffTime: Boolean,
+  agreedPaymentDate: DateTime,
+  actualPaymentDate: DateTime  
+) : Integer {
+  let cutoffTime : DateTime =
+    if useDefaultCutoffTime
+    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
+    else agreedPaymentDate;
+
+  //check if the actual date is late
+  //enforce isAfter(cutoffTime, actualPaymentDate)
+  //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
+  //throw ErgoErrorResponse{ message : "Cannot exercise late delivery when cutoff time was before actual time" };
+  if isBefore(cutoffTime, actualPaymentDate) 
+  then return 0//consider a -1 response?
+  else
+    let diff = diffDurationAs(actualPaymentDate, cutoffTime,"days");
+    //let difference = diff.amount;
+    //if difference = 0 then let difference = difference+1;//if late then treat as next (working) day
+
+    let difference = 
+      if diff.amount = 0
+      then 1
+      else diff.amount;
+
+    return difference
+
+  //todo need to consider after 5pm to be next working day too? 
+  //or is anything after 2pm on the following days also a rollover
+
+  //no easy way to create one day
+  //addDuration(dateTime("2018-01-02"), Duration{amount:1, unit: "days"})
+  //let oneday = cutoffTime addPeriod(cutoffTime)
+
+  //let oneday = Duration{amount:1, unit: "days"}
+  //let diffDays = divideDuration(diff, durationAs(oneday,"days"));
+  //let diffDays = divideDuration(diff, Duration{amount:1, unit: "days"});
+
+  //TODO this needs to be calculated as per working days
+  //return diffDays
+}
+
+/**  
+ * If the buyer is late with their payment then calculate the late penalty amount as per the calculation specified in 7.2.2
+ * note that there are conditions where this may not apply, such as if the Buyer is also in some type of default, 
+ * this function, however, just does the basic late calculation according to the contract based on the law society rate passed into the function.
+ * Due to interest rate fluctuations, this interest rate cannot be a constant.
+ * Typically it is set at the outset of the contract, in this case is defined at a contract level, but 
+ * Due to potential changes in interest rates between contract creation and calculation of any penalty this could vary
+ * potentially some kind or Oracle service could be useful here, or lookup via an API, but for the moment this is sent as an input
+ */
   //return contract.PRICE*contract.LAW_SOCIETY_RATE;
   //return contract.PRICE;
   //let penalty = price * lawSocietyrate;
   //return penalty;
-  return (price * lawSocietyrate)
-}
+  //return (price * contractRate)
+//}
+/* Calculate the time difference between current date and agreed upon date
+    let diff = diffDurationAs(now,agreed,"days");
+    let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+    // Penalty formula
+    let penalty = diffRatio * contract.penaltyPercentage/100.0 * request.goodsValue;*/
 
 define function calculateInterest(
   price : Double, 
   lawSocietyrate: Double
 ) : MonetaryAmount {
   return MonetaryAmount{ doubleValue: price*lawSocietyrate, currencyCode: "GBP" }
-  //return contract.PRICE*contract.LAW_SOCIETY_RATE;
 }
 
 //contract ResidentialSales over EmptyContract state PropertyPurchaseState {
@@ -89,7 +173,9 @@ completion date and actual completion.*/
 
 //let penaltyDuration :Duration = 
 
-let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+//let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+let diffRatio = 1.0;
+
     // Penalty formula
 let penalty = diffRatio * request.contractRate/100.0 * contract.purchasePrice;
 
@@ -192,13 +278,15 @@ paid the balance is to bear interest at the contract
         apportionmentsTotal: state.apportionmentsTotal,
         apportionmentsPaid: state.apportionmentsPaid,
         balanceRemaining: state.balanceRemaining,
-        totalPenalty: state.totalPenalty,
+        totalPenaltyAmount: state.totalPenaltyAmount,
+        totalPenaltyDays: state.totalPenaltyDays,
         totalCompensationPaidToBuyer: state.totalCompensationPaidToBuyer,
         totalCompensationPaidToSeller: state.totalCompensationPaidToSeller,
         totalDefaultDaysBuyer: state.totalDefaultDaysBuyer,
         totalDefaultDaySeller: state.totalDefaultDaySeller,
-        completion_date: state.completion_date
+        completionDate: state.completionDate
     };
+
     return LatePaymentNotificationResponse{
       sellerMayTerminate: true,//?
       buyerMayTerminate: false
@@ -206,36 +294,50 @@ paid the balance is to bear interest at the contract
   }
 
   clause LatePayment(request : LateCompletionRequest) : LateCompletionResponse emits PaymentObligation {
-    set state PropertyPurchaseState {
+    /*according to definition 1.1.1(e) of the Standard conditions of sale (fifth edition), The Law Society interest rate is:
+     * 4 percent above Barclays Bank base rate, which is currently 0.75 per cent.
+     * The Law Society interest rate is 4 per cent above Barclays Bank base rate, which is currently 0.75 per cent. 
+     * Rates are as at close of business on the day indicated.
+     * The current Law Society interest rate is 4.75 per cent (since 2 August 2018)
+    */
+
+    let interestRate = request.lawSocietyInterestRate ;
+
+    /*set state PropertyPurchaseState {
         status: "BuyerInDefault",
-        daily_penalty: contract.PRICE*contract.LAW_SOCIETY_RATE,
+        daily_penalty: contract.purchasePrice*contract.LAW_SOCIETY_RATE,
         total_penalty: contract.LAW_SOCIETY_RATE//law society amount
-    };
-    let dfdf = 0;
+    };*/
+    let diff = 1;
+    let totalAmountPayable = 0.0;
+    let lawSocietyInterestRateApplied = 4.5;
+    
     return LateCompletionResponse{
       penalty: totalAmountPayable,
       daysLate:diff,
       sellerMayTerminate: true,//?
+      lawSocietyInterestRateApplied: lawSocietyInterestRateApplied,
       buyerMayTerminate: false
     }
   }
 
  clause SellerNotVacatedNotification(request : SellerNotVacatedNotificationRequest) : SellerNotVacatedNotificationResponse {
-    set state PropertyPurchaseState {
+    /*set state PropertyPurchaseState {
         status: "SellerInDefault"
-    };
+    };*/
     return SellerNotVacatedNotificationResponse{
-      sellerMayTerminate: false,
-      buyerMayTerminate: true//?
+      //sellerMayTerminate: false,
+      totalPenalty:0.0
+      //buyerMayTerminate: true//?
     }
   }
 
   clause NoticeToComplete(request : NoticeToCompleteRequest) : NoticeToCompleteResponse {
-    set state PropertyPurchaseState {
+    /*set state PropertyPurchaseState {
         noticeGivenBy:request.issuer,
         status: "NoticeToComplete",
         completion_date:request.completion_date
-    };
+    };*/
     return NoticeToCompleteResponse{
       sellerMayTerminate: false,
       buyerMayTerminate: true//?
@@ -243,13 +345,13 @@ paid the balance is to bear interest at the contract
   }
 
   clause SellerRecinds(request : SellerRecindsRequest) : SellerRecindsResponse {
-    set state PropertyPurchaseState {
+    /*set state PropertyPurchaseState {
         status: "SellerRecinds",
         total_penalty: calculateInterest(contract.PRICE, contract.LAW_SOCIETY_RATE)
-    };
+    };*/
 
     return SellerRecindsResponse{
-      total_penalty:0.0
+      totalPenalty:0.0
     }
   }
 } // end contract

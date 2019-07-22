@@ -1,0 +1,58 @@
+namespace org.accordproject.realestate.residential.uk.utils
+
+import org.accordproject.cicero.runtime.*
+import org.accordproject.time.*
+
+/** default cutoff date as specified in standard conditions of sale */
+define constant DEFAULT_CUTOFF = "14:00:00 GMT"
+
+/**
+ * 6.1.2 indicates that 2pm is the cutoff for money to be received, 
+ * this function generate a string with 2pm set to the time for the supplied datetime so be compared against the actual time
+ */
+define function getDefaultCutoffTime(inputDate: DateTime) {
+  let dateDay = getDay(inputDate);
+  let dateMonth = getMonth(inputDate);
+  let dateYear = getYear(inputDate);
+
+  //generate an  ISO 8601 date string YYYY-MM-DD time+timezone
+  let asString =  toString(dateYear) ++ "-" ++ toString(dateMonth) ++ "-" ++ toString(dateDay) ++ " " ++ DEFAULT_CUTOFF;
+  let cutoff = dateTime(asString);
+  return cutoff
+}
+
+/*
+dUpcoming bank holidays in England and Wales 2019 according to https://www.gov.uk/bank-holidays
+26 August 2019	Monday	Summer bank holiday
+25 December	Wednesday	Christmas Day
+26 December	Thursday	Boxing Day
+Upcoming bank holidays in England and Wales 2020
+1 January	Wednesday	New Year’s Day
+10 April	Friday	Good Friday
+13 April	Monday	Easter Monday
+8 May	Friday	Early May bank holiday (VE day)
+25 May	Monday	Spring bank holiday
+31 August	Monday	Summer bank holiday
+25 December	Friday	Christmas Day
+28 December	Monday	Boxing Day (substitute day)
+*/
+
+define function isUKworkingDays(requestdate: DateTime) : Boolean {
+    //no easy way to the day portion of the Date, so opting to use the string version
+    //if getDay(requestdate)
+    return true
+}
+
+define function countUKworkingDays(
+    startDate: DateTime,
+    finishDate: DateTime
+) :Double {
+    let diff = diffDurationAs(startDate, finishDate,"days");
+    let oneday = Duration{amount:1, unit: "days"};
+    let diffDays = divideDuration(diff,durationAs(oneday,"days"));
+    //let diffDays = divideDuration(diff,durationAs(diff,"days"));
+    return diffDays
+    //loop over each day in the period and check if they are a working day and exclude from the calculation if they are
+    //foreach x in [1.0,-2.0,3.0] where x > 0.0 return x + 1.0
+    //calculate the sum of the non-zero elements in the array and return
+}

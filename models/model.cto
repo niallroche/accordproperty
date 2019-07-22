@@ -1,5 +1,6 @@
-namespace org.accordproject.realeastate.residential.uk.shortformsales
+namespace org.accordproject.realestate.residential.uk.shortformsales
 
+//import org.accordproject.realestate.residential.uk.*
 import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
 import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
 import org.accordproject.time.* from https://models.accordproject.org/v2.0/time.cto
@@ -57,8 +58,8 @@ asset ResidentialSalesContract extends AccordContract {
   /** 
   * chatels may need to be an array or it's own type as per incumbances later 
   */
-  // o String chattels
-  // o MonetaryAmount chattelsPrice
+  o String chattels
+  o MonetaryAmount chattelsPrice
 
   /**
   * Mortgage related
@@ -79,8 +80,11 @@ asset ResidentialSalesContract extends AccordContract {
   * Agreement and completion dates 
   */
   o DateTime agreementDate
-  o Duration penaltyDuration
 
+  /**
+  * law society rate
+  */
+  o Double contractRate
 }
 
 // Request
@@ -186,6 +190,9 @@ transaction SaleCompletionResponse extends Response {
 transaction LatePaymentNotificationRequest extends Request {
  /** the identifier for this matter */
   o String caseRef
+
+    /** law Society interest rate applicable */
+  o Double lawSocietyInterestRate 
 }
 
 transaction LatePaymentNotificationResponse extends Response {
@@ -196,6 +203,9 @@ transaction LatePaymentNotificationResponse extends Response {
 transaction LateCompletionRequest extends Request {
    /** the identifier for this matter */
   o String caseRef
+
+  /** law Society interest rate applicable */
+  o Double lawSocietyInterestRate 
 }
 
 transaction LateCompletionResponse extends Response {
@@ -203,6 +213,8 @@ transaction LateCompletionResponse extends Response {
   o Long daysLate
   o Boolean sellerMayTerminate
   o Boolean buyerMayTerminate
+    /** law Society interest rate applied */
+  o Double lawSocietyInterestRateApplied 
 }
 
 transaction NoticeToCompleteRequest extends Request {
@@ -222,7 +234,7 @@ transaction SellerRecindsRequest extends Request {
 
 transaction SellerRecindsResponse extends Response {
    /** the penalty */
-   o Double total_penalty
+   o Double totalPenalty
 }
 
 transaction SellerNotVacatedNotificationRequest extends Request {
@@ -232,7 +244,7 @@ transaction SellerNotVacatedNotificationRequest extends Request {
 
 transaction SellerNotVacatedNotificationResponse extends Response {
    /** the penalty */
-   o Double total_penalty
+   o Double totalPenalty
 }
 
 /**
@@ -261,12 +273,13 @@ asset PropertyPurchaseState identified by caseRef {
   o Double apportionmentsTotal
   o Double apportionmentsPaid
   o Double balanceRemaining
-  o Double totalPenalty
+  o Double totalPenaltyAmount
+  o Duration totalPenaltyDays
 	o Double totalCompensationPaidToBuyer
   o Double totalCompensationPaidToSeller
   o Integer totalDefaultDaysBuyer
   o Integer totalDefaultDaySeller
-  o DateTime completion_date
+  o DateTime completionDate
 }
 
 event PaymentObligation {
