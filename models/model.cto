@@ -15,8 +15,8 @@ transaction MyResponse extends Response {
 }
 
 enum PropertyType {
-  o LEASEHOLD
-  o FREEHOLD
+  o Leasehold
+  o Freehold
 }
 
 /**
@@ -64,7 +64,7 @@ asset ResidentialSalesContract extends AccordContract {
   /**
   * Mortgage related
   */
-  o Boolean isMortgaged
+  //o Boolean isMortgaged
   o DateTime mortgateDate
   // using a String for the moment
   o String buyerMortgageChargeNumber

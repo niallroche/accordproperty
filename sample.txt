@@ -5,14 +5,14 @@ BETWEEN:
 (2)	"Some Rich Buyer" of "10 Someplace Somecountry SE16NB" ("the Buyer")
 1.	DEFINITIONS
 1.1	In this Agreement the following definitions apply:
-the Property	:	The "Freehold" property "DemisedByTheLease" known as  "Some property Name" and registered at the Land Registry with the Title Number "NGL3453334"
+the Property: The Freehold property "DemisedByTheLease" known as "Some property Name" and registered at the Land Registry with the Title Number "NGL3453334"
 
-the Lease	:	the Lease of the Property dated 05/10/2018 and made between "SellerName" (1) and "Some Rich Buyer" (2) and any supplemental deeds and documents
-the Title Number		"NGL3453334"
-the Chattels	:	the Chattels indicated on the attached list as included in the sale "chattels"
+the Lease: the Lease of the Property dated 05/10/2018 and made between "SellerName" (1) and "Some Rich Buyer" (2) and any supplemental deeds and documents
+the Title Number "NGL3453334"
+the Chattels: the Chattels indicated on the attached list as included in the sale "chattels"
 
-the Additional Price for Chattels	:	1000 GBP
-the Charge	:	The mortgage dated 05/16/2018 and referred to at entry no "NAT232232" of the charges register of the title to the Property.
-the Purchase Price	:	1000000
-the Deposit	:	100000 GBP
-the Contract Rate : 4.75%
+the Additional Price for Chattels: 1000 GBP
+the Charge:	The mortgage dated 05/16/2018 and referred to at entry no "NAT232232" of the charges register of the title to the Property.
+the Purchase Price: 1000000
+the Deposit: 100000 GBP
+the Contract Rate: 4.75%
