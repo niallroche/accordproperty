@@ -80,10 +80,6 @@ define function calculatePenaltyDuration(
     then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
     else agreedPaymentDate;
 
-  //check if the actual date is late
-  //enforce isAfter(cutoffTime, actualPaymentDate)
-  //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
-  //throw ErgoErrorResponse{ message : "Cannot exercise late delivery when cutoff time was before actual time" };
   if isBefore(cutoffTime, actualPaymentDate) 
   then return 0 //consider a -1 response as really this should not have been called if there was not a penalty condition
   else

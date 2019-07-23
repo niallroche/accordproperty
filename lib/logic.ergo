@@ -35,23 +35,11 @@ import org.accordproject.dates.utils.uk.*
 
 contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseState {
 
-  /**  
- * If the buyer is late with their payment then calculate the late penalty amount as per the calculation specified in 7.2.2
- * note that there are conditions where this may not apply, such as if the Buyer is also in some type of default, 
- * this function, however, just does the basic late calculation according to the contract based on the law society rate passed into the function.
- * Due to interest rate fluctuations, this interest rate cannot be a constant.
- * Typically it is set at the outset of the contract, in this case is defined at a contract level, but 
- * Due to potential changes in interest rates between contract creation and calculation of any penalty this could vary
- * potentially some kind or Oracle service could be useful here, or lookup via an API, but for the moment this is sent as an input
- */
-  clause latedeliveryandpenalty(request : SaleCompletionRequest) : SaleCompletionResponse emits PaymentObligation {
+  clause completeSale(request : SaleCompletionRequest) : SaleCompletionResponse emits PaymentObligation {
     let agreed = request.agreedDepositDate;
     let received = request.depositReceivedAt;
 
-    //check time, if not specified then the 2pm dealine applies, but it may be earlier due to an agreed chain time
-    //TODO check what happens if agree to be received after 2pm, such as COB or before midnight
-    //TODO consider if we need a clause/function to check if there is a breach, and if so how much, but not to trigger a breach
-
+    //TODO check if deposit has not been received
     //deposit may not have been received yet
     /*match received
       let received = request.depositReceivedAt;
@@ -62,124 +50,131 @@ contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseSt
     /*match request.depositReceivedAt
     with let? received then let received = request.depositReceivedAt
     else let received = now */
+
+  //need to check if there is a late penalty to apply
+  /*
+    If the money due on completion is received after 2.00pm, completion is to be treated, for
+    the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a
+    result of the buyer's default
+  */
+  let useDefaultCutoffTime = true; //default to 2pm cutoff for the moment
+  let isPaymentLate = determineIfLatePaymentApplies(useDefaultCutoffTime, contract.completionDate, request.paymentDate);
+  enforce isPaymentLate
+  //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
+  else throw ErgoErrorResponse{ message : "Cannot complete as there was a late delivery of payment" };
+
+  let daysLate = 0;
+  let totalLateCompensation = 0.0;
+
+  /*if isPaymentlate 
+  then 
   let purchasePriceOutstanding = contract.purchasePrice - contract.depositAmount.doubleValue;
+  let daysLate = calculatePenaltyDuration(useDefaultCutoffTime, contract.completionDate, request.paymentDate);
+  let totalLateCompensation = calculateInterest(purchasePriceOutstanding, daysLate, contract.contractRate);*/
 
-  let useDefaultCutoffTime = true;
-  /*let agreedPaymentDate: DateTime,
-  let actualPaymentDate: DateTime  
+  //TODO consider if we need a clause/function to check if there is a breach, and if so how much, but not to trigger a breach
+  //need to determine how many days buyer and seller are in breach as the greater has control
+  //if isPaymentLate  then
+  //let daysLate = calculatePenaltyDuration(useDefaultCutoffTime, contract.completionDate, request.paymentDate);
+  //let diff = 1;
 
-  let daysLate = calculatePenaltyDuration(useDefaultCutoffTime, agreedPaymentDate, actualPaymentDate);
-  let totalLateCompensation = calculateInterest(purchasePriceOutstanding, daysLate, contract.contractRate)*/
+  //log "difference in days" diff
 
+  //5.3
+  let totalRepairCosts = 0.0;
 
-/*
-If the money due on completion is received after 2.00pm, completion is to be treated, for
-the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a
-result of the buyer's default
-*/
-let diff = diffDurationAs(received,agreed,"days"); //time??
-//let diff = 1;
+  /*7.2 Late completion
 
-//log "difference in days" diff
+  7.2.2 Compensation is calculated at the contract rate on an amount equal to the purchase price,
+  less (where the buyer is the paying party) any deposit paid, for the period by which the
+  paying party's default exceeds that of the receiving party, or, if shorter, the period between
+  completion date and actual completion.*/
 
-//5.3
-let totalRepairCosts = 0.0;
+  /* Apportionments
 
-/*7.2 Late completion
+  104,750 = 1 * 4.75/100 * 100,000 / 365.??? leap year
 
-7.2.2 Compensation is calculated at the contract rate on an amount equal to the purchase price,
-less (where the buyer is the paying party) any deposit paid, for the period by which the
-paying party's default exceeds that of the receiving party, or, if shorter, the period between
-completion date and actual completion.*/
-/*let totalLateCompensation =
-      integerToDouble(diff) 
-		  * request.contractRate/100.0 * contract.purchasePrice;*/
+  could be buyer or seller, seller is on full amount, buyer
 
-//let penaltyDuration :Duration = 
+  apportionment over a year 365 days
+  spread over 356 days then deividesd
+  seller owns until the end of the day
+  day after buyer pays
 
-//let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
-let diffRatio = 1.0;
+  buyer must be granted access before completion to check property, possibly multiple times by agreement, 
+  if this was not allowed it could be a reason for compensation
 
-    // Penalty formula
-let penalty = diffRatio * request.contractRate/100.0 * contract.purchasePrice;
+  compensation could be reasonable expenses related to non-vacation or issues moving in (due to damage???)
+  hotel expenses, moving and stroage fees etc. this needs to be paid less and per day compensation that is specified in the contract as an per day interest payment
 
-let totalLateCompensation = penalty;
-/* Apportionments
+  buyerIsTenant
+  buyerHasOccupiedAsALicencee
+  propertyVacatedBySellerBeforeAgreedTime
 
-104,750 = 1 * 4.75/100 * 100,000 / 365.??? leap year
+  propertyVacatedBySellerBeforeAgreedTime
+  isVacantPossession
+  wasAccessGranted
+  insurancePaymentOutstanding
+  insurancePaymentOutstandingAmount
+  seller owns the building until the end of the completion date
+  apportionmentDailyAmount (annualAmount/365)
 
-could be buyer or seller, seller is on full amount, buyer
+  6.3.5 provisionalApportionmentAmount
+  must notify parties
+  balance to be paid no more than 10 days, after that it incurrs interest at the standard rate
 
-apportionment over a year 365 days
-spread over 356 days then deividesd
-seller owns until the end of the day
-day after buyer pays
+  let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
+      // Penalty formula
+      let penalty = diffRatio * contract.penaltyPercentage/100.0 * request.goodsValue;
+  
+  */
+  let totalApportionments = 0.0;
 
-buyer must be granted access before completion to check property, possibly multiple times by agreement, 
-if this was not allowed it could be a reason for compensation
+  /*6.4 Amount payable
+  The amount payable by the buyer on completion is the purchase price and the contents
+  price (less any deposit already paid to the seller or his agent) adjusted to take account of:
+  (a) apportionments made under condition 6.3
+  (b) any compensation to be paid or allowed
+  (c) any sum payable under condition 5.1.3*/
 
-compensation couldbe reasonable expenses related to non-vacation or issues moving in (due to damage???)
-hotel expenses, moving and stroage fees etc. this needs to be paid less and per day compensation that is specified in the contract as an per day interest payment
+  //6.1.3
+  // vacant possession 
 
-buyerIsTenant
-buyerHasOccupiedAsALicencee
-propertyVacatedBySellerBeforeAgreedTime
+  let totalAmountPayable = 0.0;
+  let totalAmountPayable = totalAmountPayable + totalApportionments;
+  let totalAmountPayable = totalAmountPayable + totalLateCompensation;
+  let totalAmountPayable = totalAmountPayable + totalRepairCosts;
 
-propertyVacatedBySellerBeforeAgreedTime
-isVacantPossession
-wasAccessGranted
-insurancePaymentOutstanding
-insurancePaymentOutstandingAmount
-seller owns the building until the end of the completion date
-apportionmentDailyAmount (annualAmount/365)
+  //need conditions for deposit being received 
+  //A on or ahead of agreed time
+  //B after agreed
+  //C if after agreed then need to consider if this invalidates the contract
 
-6.3.5 provisionalApportionmentAmount
-must notify parties
-balance to be paid no more than 10 days, after that it incurrs interest at the standard rate
+  
+  //7.5.2
+  /*
+  Any resulting balance is to be paid no more than ten working days later, and if not then
+  paid the balance is to bear interest at the contract
+  */
 
-let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
-    // Penalty formula
-    let penalty = diffRatio * contract.penaltyPercentage/100.0 * request.goodsValue;
- 
-*/
-let totalApportionments = 0.0;
-
-/*6.4 Amount payable
-The amount payable by the buyer on completion is the purchase price and the contents
-price (less any deposit already paid to the seller or his agent) adjusted to take account of:
-(a) apportionments made under condition 6.3
-(b) any compensation to be paid or allowed
-(c) any sum payable under condition 5.1.3*/
-
-//6.1.3
-// vacant possession 
-
-let totalAmountPayable = 0.0;
-let totalAmountPayable = totalAmountPayable + totalApportionments;
-let totalAmountPayable = totalAmountPayable + totalLateCompensation;
-let totalAmountPayable = totalAmountPayable + totalRepairCosts;
-
-    //need conditions for deposit being received 
-    //A on or ahead of agreed time
-    //B after agreed
-    //C if after agreed then need to consider if this invalidates the contract
-
-    
-    //7.5.2
-    /*
-Any resulting balance is to be paid no more than ten working days later, and if not then
-paid the balance is to bear interest at the contract
-    */
-
-   return SaleCompletionResponse{
+   return SaleCompletionResponse {
       penalty: totalAmountPayable,
       caseRef: request.caseRef,
-      daysLate:diff,
+      daysLate: daysLate,
       sellerMayTerminate: false,
       buyerMayTerminate: false
     }
   } // end clause latedeliveryandpenalty
 
+ /**
+  * If the buyer is late with their payment then calculate the late penalty amount as per the calculation specified in 7.2.2
+  * note that there are conditions where this may not apply, such as if the Buyer is also in some type of default, 
+  * this function, however, just does the basic late calculation according to the contract based on the law society rate passed into the function.
+  * Due to interest rate fluctuations, this interest rate cannot be a constant.
+  * Typically it is set at the outset of the contract, in this case is defined at a contract level, but 
+  * Due to potential changes in interest rates between contract creation and calculation of any penalty this could vary
+  * potentially some kind or Oracle service could be useful here, or lookup via an API, but for the moment this is sent as an input
+  */
   clause LatePaymentNotification(request : LatePaymentNotificationRequest) : LatePaymentNotificationResponse {
     set state PropertyPurchaseState {
         status: "BuyerInDefault",
@@ -212,20 +207,27 @@ paid the balance is to bear interest at the contract
      * The current Law Society interest rate is 4.75 per cent (since 2 August 2018)
     */
 
-    let interestRate = request.lawSocietyInterestRate ;
+    let useDefaultCutoffTime = true; //default to 2pm cutoff for the moment
+    let isPaymentlate = determineIfLatePaymentApplies(useDefaultCutoffTime, contract.completionDate, request.paymentDate);
+    //check if the actual date is late
+    enforce isPaymentlate
+    //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
+    else throw ErgoErrorResponse{ message : "Cannot exercise late delivery when cutoff time was before actual time" };
 
-    /*set state PropertyPurchaseState {
-        status: "BuyerInDefault",
-        daily_penalty: contract.purchasePrice*contract.LAW_SOCIETY_RATE,
-        total_penalty: contract.LAW_SOCIETY_RATE//law society amount
-    };*/
-    let diff = 1;
-    let totalAmountPayable = 0.0;
-    let lawSocietyInterestRateApplied = 4.5;
+    let purchasePriceOutstanding = contract.purchasePrice - contract.depositAmount.doubleValue;
+    let daysLate = calculatePenaltyDuration(useDefaultCutoffTime, contract.completionDate, request.paymentDate);
+    let totalLateCompensation = calculateInterest(purchasePriceOutstanding, daysLate, contract.contractRate);
+  
+    //let interestRate = request.lawSocietyInterestRate; use contract rate although request rate may be used in future
+    let interestRate = contract.contractRate;
+
+    //let totalAmountPayable =  MonetaryAmount{doubleValue: totalLateCompensation, currencyCode: "GBP"};//may need to deduct through any breach
+    let lawSocietyInterestRateApplied = interestRate;
     
     return LateCompletionResponse{
-      penalty: totalAmountPayable,
-      daysLate:diff,
+      //penalty: MonetaryAmount{doubleValue: totalLateCompensation, currencyCode: "GBP"},
+      penalty: totalLateCompensation.doubleValue,
+      daysLate:daysLate,
       sellerMayTerminate: true,//?
       lawSocietyInterestRateApplied: lawSocietyInterestRateApplied,
       buyerMayTerminate: false

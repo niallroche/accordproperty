@@ -135,7 +135,7 @@ transaction ResidentialSalesRequest extends Request {
   o MonetaryAmount chattelsPrice
 
   //o Boolean hasMortgage
-  o DateTime mortgateDate
+  o DateTime mortgageDate
   o String buyerMortgageChargeNumber
   o MonetaryAmount depositAmount
   o MonetaryAmount purchasePrice
@@ -168,6 +168,8 @@ transaction SaleCompletionRequest extends Request {
    */
   //o DateTime depositReceivedAt optional
   o DateTime depositReceivedAt
+  o DateTime paymentDate
+  o MonetaryAmount paymentAmount
 
   /**
    * The BOE interest rate for the penalty to be paid by the buyer if late
@@ -185,7 +187,8 @@ transaction SaleCompletionResponse extends Response {
    */
   o Double penalty
 
-  o Duration daysLate
+  //o Duration daysLate
+  o Integer daysLate //should be temporal unit
 
   /**
    * Whether the buyer may terminate the contract 
@@ -207,6 +210,9 @@ transaction LatePaymentNotificationRequest extends Request {
 
     /** law Society interest rate applicable */
   o Double lawSocietyInterestRate 
+
+  o DateTime paymentDate
+  o MonetaryAmount paymentAmount
 }
 
 transaction LatePaymentNotificationResponse extends Response {
@@ -220,6 +226,9 @@ transaction LateCompletionRequest extends Request {
 
   /** law Society interest rate applicable */
   o Double lawSocietyInterestRate 
+
+  o DateTime paymentDate
+  o MonetaryAmount paymentAmount
 }
 
 transaction LateCompletionResponse extends Response {
