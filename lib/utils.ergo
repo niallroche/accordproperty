@@ -1,7 +1,27 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ /**
+  * this contract represents elements of the Standard Conditions of Sale (5th edition) from  the UK Law Society governing rules around house purchase in the UK
+  * see https://www.lawsociety.org.uk/support-services/documents/standard-conditions-of-sale-5th-edition/ for full details
+  */
+  
 namespace org.accordproject.realestate.residential.uk.utils
 
 import org.accordproject.cicero.runtime.*
 import org.accordproject.time.*
+import org.accordproject.money.MonetaryAmount
 
 /** default cutoff date as specified in standard conditions of sale */
 define constant DEFAULT_CUTOFF = "14:00:00 GMT"
@@ -10,7 +30,9 @@ define constant DEFAULT_CUTOFF = "14:00:00 GMT"
  * 6.1.2 indicates that 2pm is the cutoff for money to be received, 
  * this function generate a string with 2pm set to the time for the supplied datetime so be compared against the actual time
  */
-define function getDefaultCutoffTime(inputDate: DateTime) {
+define function getDefaultCutoffTime(
+    inputDate: DateTime
+) : DateTime {
   let dateDay = getDay(inputDate);
   let dateMonth = getMonth(inputDate);
   let dateYear = getYear(inputDate);
@@ -21,38 +43,98 @@ define function getDefaultCutoffTime(inputDate: DateTime) {
   return cutoff
 }
 
-/*
-dUpcoming bank holidays in England and Wales 2019 according to https://www.gov.uk/bank-holidays
-26 August 2019	Monday	Summer bank holiday
-25 December	Wednesday	Christmas Day
-26 December	Thursday	Boxing Day
-Upcoming bank holidays in England and Wales 2020
-1 January	Wednesday	New Year’s Day
-10 April	Friday	Good Friday
-13 April	Monday	Easter Monday
-8 May	Friday	Early May bank holiday (VE day)
-25 May	Monday	Spring bank holiday
-31 August	Monday	Summer bank holiday
-25 December	Friday	Christmas Day
-28 December	Monday	Boxing Day (substitute day)
-*/
+/**
+ * 6.1.2 indicates that 2pm is the cutoff for money to be received, if money is received after this point, the it is to be treated for
+ * the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a result of the buyer's default. 
+ * If an alternative time has been agreed (usually known as a chain time), then this time should be used instead of 2pm.
+ * This function accepts a boolean value to determine if the 2pm deadline is in force, if not supplied it will default to the date and time supplied
+ */
+define function determineIfLatePaymentApplies(
+  useDefaultCutoffTime: Boolean,
+  agreedPaymentDate: DateTime,
+  actualPaymentDate: DateTime  
 
-define function isUKworkingDays(requestdate: DateTime) : Boolean {
-    //no easy way to the day portion of the Date, so opting to use the string version
-    //if getDay(requestdate)
-    return true
+) : Boolean {
+  //check if an explicit time is specified, otehrwise use the default
+  let cutoffTime : DateTime =
+    if useDefaultCutoffTime
+    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
+    else agreedPaymentDate;
+
+  //check if the actual date is late
+  if isBefore(cutoffTime, actualPaymentDate) 
+  then return true
+  else return false
 }
 
-define function countUKworkingDays(
-    startDate: DateTime,
-    finishDate: DateTime
-) :Double {
-    let diff = diffDurationAs(startDate, finishDate,"days");
-    let oneday = Duration{amount:1, unit: "days"};
-    let diffDays = divideDuration(diff,durationAs(oneday,"days"));
-    //let diffDays = divideDuration(diff,durationAs(diff,"days"));
-    return diffDays
-    //loop over each day in the period and check if they are a working day and exclude from the calculation if they are
-    //foreach x in [1.0,-2.0,3.0] where x > 0.0 return x + 1.0
-    //calculate the sum of the non-zero elements in the array and return
+/**  
+  * If the buyer is late with their payment then calculate the delay for the purposes of applying a late penalty amount as per 7.2.2
+ */
+define function calculatePenaltyDuration(
+  useDefaultCutoffTime: Boolean,
+  agreedPaymentDate: DateTime,
+  actualPaymentDate: DateTime  
+) : Integer {
+  let cutoffTime : DateTime =
+    if useDefaultCutoffTime
+    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
+    else agreedPaymentDate;
+
+  //check if the actual date is late
+  //enforce isAfter(cutoffTime, actualPaymentDate)
+  //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
+  //throw ErgoErrorResponse{ message : "Cannot exercise late delivery when cutoff time was before actual time" };
+  if isBefore(cutoffTime, actualPaymentDate) 
+  then return 0 //consider a -1 response as really this should not have been called if there was not a penalty condition
+  else
+    let diff = diffDurationAs(actualPaymentDate, cutoffTime,"days");
+    //let difference = diff.amount;
+    //if difference = 0 then let difference = difference+1;//if late then treat as next (working) day
+    
+    let difference = 
+      if diff.amount = 0
+      then 1 //TODO should determine if the next day is non a working day and continue to increment until it is a valid working day
+      //let nextDay = getNextWorkingday()
+      else diff.amount;
+
+    return difference
+
+  //todo need to consider after 5pm to be next working day too? 
+  //or is anything after 2pm on the following days also a rollover
+
+  //no easy way to create one day
+  //addDuration(dateTime("2018-01-02"), Duration{amount:1, unit: "days"})
+  //let oneday = cutoffTime addPeriod(cutoffTime)
+
+  //let oneday = Duration{amount:1, unit: "days"}
+  //let diffDays = divideDuration(diff, durationAs(oneday,"days"));
+  //let diffDays = divideDuration(diff, Duration{amount:1, unit: "days"});
+
+  //TODO this needs to be calculated as per working days
+  //return diffDays
+}
+
+
+  //return contract.PRICE*contract.LAW_SOCIETY_RATE;
+  //return contract.PRICE;
+  //let penalty = price * lawSocietyrate;
+  //return penalty;
+  //return (price * contractRate)
+//}
+
+/**
+ * Calculate the penalty applicable time difference between recognised payment date and agreed upon date
+ * the payment may be reflected as the next working day if after 2pm
+ * Penalty formula:
+ * penalty = number of days late * penaltyPercentage/100.0 * purchase price;
+*/
+define function calculateInterest(
+  purchasePriceOutstanding : Double, 
+  daysLate : Integer,
+  contractRate: Double
+) : MonetaryAmount {
+    let totalLateCompensation =
+        integerToDouble(daysLate) 
+            * contractRate/100.0 * purchasePriceOutstanding;
+    return MonetaryAmount{ doubleValue: totalLateCompensation, currencyCode: "GBP" }
 }

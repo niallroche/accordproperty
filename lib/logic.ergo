@@ -24,78 +24,18 @@ import org.accordproject.time.*
 import org.accordproject.money.MonetaryAmount
 
 import org.accordproject.realestate.residential.uk.utils.*
+import org.accordproject.dates.utils.uk.*
 
 /**
- * 6.1.2 indicates that 2pm is the cutoff for money to be received, if money is received after this point, the it is to be treated for
- * the purposes only of conditions 6.3 and 7.2, as taking place on the next working day as a result of the buyer's default. 
- * If an alternative time has been agreed (usually known as a chain time), then this time should be used instead of 2pm.
- * This function accepts a boolean value to determine if the 2pm deadline is in force, if not supplied it will default to the date and time supplied
+ * This is the main contract to manage the sale of a residential property in the Uk.
+ * Given the complexities, this contract does not cover the entore agreement, or all of the nuances and edge cases, but is a starting point for automating many of the key clauses.
+ * Given differences between leashold and freehold properties this may ultimately require two distinct contracts with common elements
+ * however we are trying to keep it in one contraxct for the moment
  */
-define function determineIfLatePaymentApplies(
-  useDefaultCutoffTime: Boolean,
-  agreedPaymentDate: DateTime,
-  actualPaymentDate: DateTime  
 
-):Boolean {
-  //check if an explicit time is specified, otehrwise use the default
-  let cutoffTime : DateTime =
-    if useDefaultCutoffTime
-    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
-    else agreedPaymentDate;
+contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseState {
 
-  //check if the actual date is late
-  if isBefore(cutoffTime, actualPaymentDate) 
-  then return true
-  else return false
-}
-
- /**  
-  * If the buyer is late with their payment then calculate the delay for the purposes of applying a late penalty amount as per 7.2.2
- */
-define function calculatePenaltyDuration(
-  useDefaultCutoffTime: Boolean,
-  agreedPaymentDate: DateTime,
-  actualPaymentDate: DateTime  
-) : Integer {
-  let cutoffTime : DateTime =
-    if useDefaultCutoffTime
-    then getDefaultCutoffTime(agreedPaymentDate) //need to check for the 2pm cut off
-    else agreedPaymentDate;
-
-  //check if the actual date is late
-  //enforce isAfter(cutoffTime, actualPaymentDate)
-  //else throw failure("Cannot exercise late delivery when cutoff time was before actual time");
-  //throw ErgoErrorResponse{ message : "Cannot exercise late delivery when cutoff time was before actual time" };
-  if isBefore(cutoffTime, actualPaymentDate) 
-  then return 0//consider a -1 response?
-  else
-    let diff = diffDurationAs(actualPaymentDate, cutoffTime,"days");
-    //let difference = diff.amount;
-    //if difference = 0 then let difference = difference+1;//if late then treat as next (working) day
-
-    let difference = 
-      if diff.amount = 0
-      then 1
-      else diff.amount;
-
-    return difference
-
-  //todo need to consider after 5pm to be next working day too? 
-  //or is anything after 2pm on the following days also a rollover
-
-  //no easy way to create one day
-  //addDuration(dateTime("2018-01-02"), Duration{amount:1, unit: "days"})
-  //let oneday = cutoffTime addPeriod(cutoffTime)
-
-  //let oneday = Duration{amount:1, unit: "days"}
-  //let diffDays = divideDuration(diff, durationAs(oneday,"days"));
-  //let diffDays = divideDuration(diff, Duration{amount:1, unit: "days"});
-
-  //TODO this needs to be calculated as per working days
-  //return diffDays
-}
-
-/**  
+  /**  
  * If the buyer is late with their payment then calculate the late penalty amount as per the calculation specified in 7.2.2
  * note that there are conditions where this may not apply, such as if the Buyer is also in some type of default, 
  * this function, however, just does the basic late calculation according to the contract based on the law society rate passed into the function.
@@ -104,37 +44,13 @@ define function calculatePenaltyDuration(
  * Due to potential changes in interest rates between contract creation and calculation of any penalty this could vary
  * potentially some kind or Oracle service could be useful here, or lookup via an API, but for the moment this is sent as an input
  */
-  //return contract.PRICE*contract.LAW_SOCIETY_RATE;
-  //return contract.PRICE;
-  //let penalty = price * lawSocietyrate;
-  //return penalty;
-  //return (price * contractRate)
-//}
-/* Calculate the time difference between current date and agreed upon date
-    let diff = diffDurationAs(now,agreed,"days");
-    let diffRatio = divideDuration(diff,durationAs(contract.penaltyDuration,"days"));
-    // Penalty formula
-    let penalty = diffRatio * contract.penaltyPercentage/100.0 * request.goodsValue;*/
-
-define function calculateInterest(
-  price : Double, 
-  lawSocietyrate: Double
-) : MonetaryAmount {
-  return MonetaryAmount{ doubleValue: price*lawSocietyrate, currencyCode: "GBP" }
-}
-
-//contract ResidentialSales over EmptyContract state PropertyPurchaseState {
-contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseState {
-
-  //TODO consider if we need a clause/function to check if there is a breech, and if so how much, but not to trigger a breach
-
   clause latedeliveryandpenalty(request : SaleCompletionRequest) : SaleCompletionResponse emits PaymentObligation {
     let agreed = request.agreedDepositDate;
     let received = request.depositReceivedAt;
 
     //check time, if not specified then the 2pm dealine applies, but it may be earlier due to an agreed chain time
     //TODO check what happens if agree to be received after 2pm, such as COB or before midnight
-
+    //TODO consider if we need a clause/function to check if there is a breach, and if so how much, but not to trigger a breach
 
     //deposit may not have been received yet
     /*match received

@@ -80,6 +80,7 @@ asset ResidentialSalesContract extends AccordContract {
   * Agreement and completion dates 
   */
   o DateTime agreementDate
+  o DateTime completionDate
 
   /**
   * law society rate

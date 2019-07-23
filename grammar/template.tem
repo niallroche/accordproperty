@@ -1,4 +1,4 @@
-THIS AGREEMENT is made on [{agreementDate}]
+THIS AGREEMENT is made on [{agreementDate as "DD/MM/YYYY"}]
 
 BETWEEN:
 (1)	[{seller}] of [{sellerAddress}] ("the Seller")
@@ -15,4 +15,5 @@ the Additional Price for Chattels: [{chattelsPrice}]
 the Charge:	The mortgage dated [{mortgateDate}] and referred to at entry no [{buyerMortgageChargeNumber}] of the charges register of the title to the Property.
 the Purchase Price: [{purchasePrice}]
 the Deposit: [{depositAmount}]
+the Completion Date: [{completionDate as "DD/MM/YYYY"}]
 the Contract Rate: [{contractRate}]%
