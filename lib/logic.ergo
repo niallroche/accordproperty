@@ -27,7 +27,7 @@ import org.accordproject.realestate.residential.uk.utils.*
 import org.accordproject.dates.utils.uk.*
 
 /**
- * This is the main contract to manage the sale of a residential property in the Uk.
+ * This is the main contract to manage the sale of a residential property in the England and Wales.
  * Given the complexities, this contract does not cover the entore agreement, or all of the nuances and edge cases, but is a starting point for automating many of the key clauses.
  * Given differences between leashold and freehold properties this may ultimately require two distinct contracts with common elements
  * however we are trying to keep it in one contraxct for the moment
@@ -62,6 +62,14 @@ contract ResidentialSales over ResidentialSalesContract state PropertyPurchaseSt
     /*match request.depositReceivedAt
     with let? received then let received = request.depositReceivedAt
     else let received = now */
+  let purchasePriceOutstanding = contract.purchasePrice - contract.depositAmount.doubleValue;
+
+  let useDefaultCutoffTime = true;
+  /*let agreedPaymentDate: DateTime,
+  let actualPaymentDate: DateTime  
+
+  let daysLate = calculatePenaltyDuration(useDefaultCutoffTime, agreedPaymentDate, actualPaymentDate);
+  let totalLateCompensation = calculateInterest(purchasePriceOutstanding, daysLate, contract.contractRate)*/
 
 
 /*
@@ -156,20 +164,7 @@ let totalAmountPayable = totalAmountPayable + totalRepairCosts;
     //B after agreed
     //C if after agreed then need to consider if this invalidates the contract
 
-    // Calculate the time difference between current date and agreed upon date
-    //let diff = diffDurationAs(now(),agreed,"days").amount;
-
-    // Penalty formula below from  latedelivery and penalty clause
-    /*let penalty =
-      (integerToDouble(diff) / integerToDouble(contract.penaltyDuration.amount))
-		  * contract.penaltyPercentage/100.0 * request.goodsValue;
-    // Penalty may be capped
-    let capped = min([penalty, contract.capPercentage * request.goodsValue / 100.0]);
-    // Return the response with the penalty and termination determination
-    return SaleCompletionResponse{
-      penalty: capped,
-      buyerMayTerminate: diff > contract.termination.amount
-    }*/
+    
     //7.5.2
     /*
 Any resulting balance is to be paid no more than ten working days later, and if not then
