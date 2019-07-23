@@ -54,8 +54,10 @@ asset ResidentialSalesContract extends AccordContract {
  	o AccordParty seller
 	o AccordParty buyer
 
-	o PostalAddress sellerAddress
-  o PostalAddress buyerAddress
+	o String sellerAddress
+  o String buyerAddress
+	//o PostalAddress sellerAddress
+  //o PostalAddress buyerAddress
 
   /** 
   * Property details

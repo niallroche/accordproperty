@@ -1,8 +1,8 @@
 THIS AGREEMENT is made on 17/05/2018
 
 BETWEEN:
-(1)	"SellerName" of "SE16NB" ("the Seller")
-(2)	"Some Rich Buyer" of "10 Someplace Somecountry SE16NB" ("the Buyer")
+(1)	"SellerName" of "10 Someplace Somecountry SE17NB" ("the Seller")
+(2)	"Some Rich Buyer" of "10 Someotherplace Somecountry SE16NB" ("the Buyer")
 1.	DEFINITIONS
 1.1	In this Agreement the following definitions apply:
 the Property: The Leasehold property "DemisedByTheLease" known as "Some property Name" and registered at the Land Registry with the Title Number "NGL3453334"
