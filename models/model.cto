@@ -1,11 +1,30 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ /**
+  * this model represents elements of the Standard Conditions of Sale (5th edition) contract from  the UK Law Society * * * governing rules around house purchase in the UK
+  * see https://www.lawsociety.org.uk/support-services/documents/standard-conditions-of-sale-5th-edition/ for full details
+  */
+  
 namespace org.accordproject.realestate.residential.uk.shortformsales
 
-//import org.accordproject.realestate.residential.uk.*
 import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
 import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
 import org.accordproject.time.* from https://models.accordproject.org/v2.0/time.cto
 import org.accordproject.money.MonetaryAmount from https://models.accordproject.org/money.cto
-
+import org.accordproject.address.PostalAddress from https://models.accordproject.org/address.cto
+      
 transaction MyRequest extends Request {
   o String input
 }
@@ -19,6 +38,11 @@ enum PropertyType {
   o Freehold
 }
 
+enum TitleType {
+  o Full
+  o Limited
+}
+
 /**
  * The template model
  */
@@ -27,16 +51,11 @@ asset ResidentialSalesContract extends AccordContract {
   /**
   * Buyer and seller details
   */
-
  	o AccordParty seller
 	o AccordParty buyer
 
-  //removed for brevity, using a string for simplicity
-	//o PostalAddress sellerAddress
-  //o PostalAddress buyerAddress
-
-  o String sellerAddress
-  o String buyerAddress
+	o PostalAddress sellerAddress
+  o PostalAddress buyerAddress
 
   /** 
   * Property details
@@ -46,12 +65,12 @@ asset ResidentialSalesContract extends AccordContract {
   * Land Registry Title number
    */
   o String titleNumber
+  o TitleType titleType
 
   /** 
   * freehold/leasehold related 
   */
   o PropertyType freeholdLeasehold
-  /** o String freeholdLeasehold */
   o String demisedByTheLease
   o DateTime leaseDate
 
@@ -83,20 +102,24 @@ asset ResidentialSalesContract extends AccordContract {
   o DateTime completionDate
 
   /**
-  * law society rate
+  * law society rate as defined in 1.1.1(a) 
+  * the money at interest on seven days' notice of withdrawal with a clearing bank less,
+  * in either case, any proper charges for handling the money
   */
   o Double contractRate
 }
+
+/**
+* Transaction definitions
+*/
 
 // Request
 transaction ResidentialSalesRequest extends Request {
   o AccordParty seller
 	o AccordParty buyer
 
-	//o PostalAddress sellerAddress
-  //o PostalAddress buyerAddress
-  o String sellerAddress
-  o String buyerAddress
+	o PostalAddress sellerAddress
+  o PostalAddress buyerAddress
 
   o String propertyName
   o String titleNumber
@@ -109,7 +132,7 @@ transaction ResidentialSalesRequest extends Request {
   o String chattels
   o MonetaryAmount chattelsPrice
 
-  //o Boolean isMortgage
+  //o Boolean hasMortgage
   o DateTime mortgateDate
   o String buyerMortgageChargeNumber
   o MonetaryAmount depositAmount
@@ -144,27 +167,15 @@ transaction SaleCompletionRequest extends Request {
   //o DateTime depositReceivedAt optional
   o DateTime depositReceivedAt
 
-   /**
+  /**
    * The BOE interest rate for the penalty to be paid by the buyer if late
-   the interest which might reasonably have been earned by depositing
-
-1.1.1(a) the money at interest on seven days' notice of withdrawal with a clearing bank
-less, in either case, any proper charges for handling the money
+   * defined in 1.1.1 t(e) and set by the Law Society
    */
-
-  o Double interestRate
-
-  /* 1.1.1 t(e)Law Society's interest rate*/
   o Double contractRate
 
   /** the identifier for this matter */
   o String caseRef
 }
-
-/**
-* Transaction definitions
-*/
-
 
 transaction SaleCompletionResponse extends Response {
     /**
@@ -283,6 +294,9 @@ asset PropertyPurchaseState identified by caseRef {
   o DateTime completionDate
 }
 
+/**
+* Payment obligation definitions
+*/
 event PaymentObligation {
   o String from
 	o String to
